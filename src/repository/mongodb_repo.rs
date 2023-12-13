@@ -30,6 +30,17 @@ impl MongoRepo {
         Ok(user)
     }
 
+    pub async fn get_user_by_email(&self, email: String) -> Result<User, MongoError> {
+        let filter = doc! {"email": email};
+        let user_detail = self
+            .col
+            .find_one(filter, None)
+            .await
+            .ok()
+            .expect("Error getting user's detail");
+        Ok(user_detail.unwrap())
+    }
+
     pub async fn get_user(&self, id: &String) -> Result<User, MongoError> {
         let obj_id = ObjectId::parse_str(id).expect("error parsing id");
         let filter = doc! {"_id": obj_id};

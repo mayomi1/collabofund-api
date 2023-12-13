@@ -1,25 +1,73 @@
-use crate::{models::user::User, repository::mongodb_repo::MongoRepo};
+use bcrypt::{hash, DEFAULT_COST};
+
+
+use crate::{lib, models::user::User, repository::mongodb_repo::MongoRepo};
+use mongodb::bson::oid::ObjectId;
+use serde::{Deserialize, Serialize};
 
 use actix_web::{
     post, get, put, delete,
     web::{Data, Json, Path},
     HttpResponse,
 };
-use mongodb::bson::oid::ObjectId;
-use serde::{Serialize};
+
+use lib::auth::{create_jwt, AuthUserData};
 
 #[derive(Serialize)]
 struct ApiResponse {
     message: String,
 }
 
-#[post("/create")]
-pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpResponse {
+#[derive(Deserialize)]
+struct LoginRequest {
+    email: String,
+    password: String,
+}
+
+#[post("/login")]
+pub async fn login_user (db: Data<MongoRepo>, login_request: Json<LoginRequest>) -> HttpResponse {
+    let user_detail = db.get_user_by_email(login_request.email.to_string()).await;
+
+    match user_detail {
+        Ok(user) => {
+            match bcrypt::verify(&login_request.password, &user.password) {
+                Ok(matching) => {
+                    if matching {
+                        let user_data = AuthUserData {
+                            email: user.email,
+                            title: user.title,
+                            id: user.id
+                        };
+
+                        match create_jwt(user_data) {
+                            Ok(token) => HttpResponse::Ok().json(token),
+                            Err(_) => HttpResponse::InternalServerError().finish(),
+                        }
+                    } else {
+                        HttpResponse::Unauthorized().json("Invalid password")
+                    }
+                },
+                Err(_) => HttpResponse::InternalServerError().finish(),
+            }
+        },
+        Err(_) => HttpResponse::Unauthorized().json("Invalid username or password"),
+    }
+}
+
+#[post("/register")]
+pub async fn register_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpResponse {
+    let hashed_password = match hash(&new_user.password, DEFAULT_COST) {
+        Ok(h) => h,
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+    };
+
     let data = User {
         id: None,
+        email: new_user.email.to_owned(),
         name: new_user.name.to_owned(),
         location: new_user.location.to_owned(),
         title: new_user.title.to_owned(),
+        password: hashed_password,
     };
     let user_detail = db.create_user(data).await;
     match user_detail {
@@ -53,6 +101,8 @@ pub async fn update_user(db: Data<MongoRepo>, path: Path<String>, new_user: Json
         name: new_user.name.to_owned(),
         title: new_user.title.to_owned(),
         location: new_user.location.to_owned(),
+        email: new_user.email.to_owned(),
+        password: new_user.password.to_owned(),
     };
     let update_result = db.update_user(&id, data).await;
     match update_result {
