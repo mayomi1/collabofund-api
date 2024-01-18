@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse};
-use serde::{Deserialize, Serialize};
-use jsonwebtoken::{encode, Header, EncodingKey, decode, DecodingKey, Validation};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use mongodb::bson::oid::ObjectId;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthUserData {
@@ -26,28 +26,36 @@ pub fn create_jwt(user_data: AuthUserData) -> Result<String, jsonwebtoken::error
     let claims = Claims {
         sub: user_data.id.to_owned(),
         exp: expiration as usize,
-        user: user_data
+        user: user_data,
     };
 
     let header = Header::default();
-    encode(&header, &claims, &EncodingKey::from_secret("my_secret".as_ref()))
+    encode(
+        &header,
+        &claims,
+        &EncodingKey::from_secret("my_secret".as_ref()),
+    )
 }
 
 fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
-    decode::<Claims> (
+    decode::<Claims>(
         token,
         &DecodingKey::from_secret("my_secret".as_ref()),
         &Validation::default(),
-    ).map(|data| data.claims)
+    )
+    .map(|data| data.claims)
 }
 
 async fn protected_route(req: HttpRequest) -> HttpResponse {
-    let token = req.headers().get("Authorization").unwrap().to_str().unwrap();
+    let token = req
+        .headers()
+        .get("Authorization")
+        .unwrap()
+        .to_str()
+        .unwrap();
 
     match validate_jwt(token) {
-        Ok(claims) => {
-            HttpResponse::Ok().json(claims)
-        },
+        Ok(claims) => HttpResponse::Ok().json(claims),
         Err(_) => HttpResponse::Unauthorized().finish(),
     }
 }
