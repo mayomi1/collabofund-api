@@ -2,6 +2,7 @@ mod api;
 mod lib;
 mod models;
 mod repository;
+mod service;
 
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
