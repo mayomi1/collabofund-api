@@ -1,4 +1,3 @@
-use crate::models::user::User;
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use crate::providers::pooler_api::{GeneratedAccountResponse, PoolerResponse};

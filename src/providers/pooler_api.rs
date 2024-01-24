@@ -3,7 +3,7 @@ use actix_web::web::Data;
 use serde::{Deserialize, Serialize};
 use crate::api::collabo::GenerateAccountParams;
 use crate::clients::pooler_api_client::PoolerApiClient;
-use crate::models::collabo::{Collabo, CollaboAccount};
+use crate::models::collabo::{CollaboAccount};
 use crate::repository::collabo::{UpdateCollaboAccountId};
 use crate::repository::mongodb_repo::MongoRepo;
 

@@ -1,11 +1,10 @@
-use crate::models::collabo::{Collabo, CollaboAccount};
+use crate::models::collabo::{Collabo};
 use mongodb::{
     bson::{doc, oid::ObjectId},
     error::Error as MongoError,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
-    Client, Collection,
+    results::{InsertOneResult, UpdateResult}, Collection,
 };
-use crate::models::user::User;
+
 
 pub struct CollaboRepo {
     pub collabo: Collection<Collabo>,

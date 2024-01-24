@@ -1,9 +1,8 @@
-use crate::models::collabo::{Collabo, CollaboAccount};
+use crate::models::collabo::{CollaboAccount};
 use mongodb::{
     bson::{doc, oid::ObjectId},
     error::Error as MongoError,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
-    Client, Collection,
+    results::{InsertOneResult}, Collection,
 };
 
 pub struct CollaboAccountRepo {

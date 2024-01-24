@@ -1,6 +1,6 @@
 use bcrypt::{hash, DEFAULT_COST};
 
-use crate::{lib, models::user::User, repository::mongodb_repo::MongoRepo};
+use crate::{utils, models::user::User, repository::mongodb_repo::MongoRepo};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ use actix_web::{
     HttpResponse,
 };
 
-use lib::auth::{create_jwt, AuthUserData};
+use utils::auth::{create_jwt, AuthUserData};
 
 #[derive(Serialize)]
 struct ApiResponse {

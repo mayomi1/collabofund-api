@@ -1,9 +1,9 @@
 use crate::models::collabo::Collabo;
 use crate::repository::mongodb_repo::MongoRepo;
-use actix_web::{delete, get, post, put, web::{Data, Json, Path}, HttpResponse, HttpRequest};
-use mongodb::bson::oid::ObjectId;
+use actix_web::{post, web::{Data, Json, Path}, HttpResponse, HttpRequest};
+
 use serde::{Deserialize, Serialize};
-use crate::lib::auth::protected_route;
+use crate::utils::auth::protected_route;
 use crate::providers::pooler_api::PoolerProvider;
 
 #[derive(Deserialize)]

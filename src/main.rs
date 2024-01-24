@@ -1,5 +1,5 @@
 mod api;
-mod lib;
+mod utils;
 mod models;
 mod repository;
 mod providers;

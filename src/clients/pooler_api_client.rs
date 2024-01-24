@@ -7,7 +7,6 @@ pub struct PoolerApiClient {
     base_url: String,
     client: reqwest::Client,
     authorization_token: String,
-
 }
 
 impl PoolerApiClient {
@@ -39,6 +38,7 @@ impl PoolerApiClient {
     {
         let url = format!("{}/{}", self.base_url, endpoint);
         let mut request = self.client.post(&url).json(body);
+
 
         if let token = &self.authorization_token {
             request = request.header("Authorization", format!("Bearer {}", token));
