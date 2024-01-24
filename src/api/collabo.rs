@@ -1,23 +1,20 @@
 use crate::models::collabo::Collabo;
 use crate::repository::mongodb_repo::MongoRepo;
-use actix_web::{
-    delete, get, post, put,
-    web::{Data, Json, Path},
-    HttpResponse,
-};
-use mongodb::results::InsertOneResult;
+use actix_web::{delete, get, post, put, web::{Data, Json, Path}, HttpResponse, HttpRequest};
+use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
+use crate::lib::auth::protected_route;
 use crate::providers::pooler_api::PoolerProvider;
 
 #[derive(Deserialize)]
-struct CollaboRequest {
+pub struct CollaboRequest {
     name: String,
     balance: Option<f64>,
 }
 
 
 #[derive(Deserialize)]
-struct GenerateAccountRequest {
+pub struct GenerateAccountRequest {
     bvn: String,
     mobile_number: String
 }
@@ -42,14 +39,22 @@ struct GenerateAccountResponse {
 
 #[post("/new")]
 pub async fn create_collabo(
+    req: HttpRequest,
     db: Data<MongoRepo>,
     collabo_request: Json<CollaboRequest>,
 ) -> HttpResponse {
+    let user = match protected_route(req).await {
+        Ok(usr) => usr,
+        Err(_) => return HttpResponse::Unauthorized().finish().into(),
+    };
+
+    println!("user data: {:?}", user);
     let data = Collabo {
         id: None,
         name: collabo_request.name.to_owned(),
         balance: 0.00,
-        collabo_account: None,
+        user_id: user.id.map(|oid| oid.to_string()).unwrap_or_default(),
+        collabo_account_id: None,
     };
     let collabo_details = db.collabo_repo.create_collabo(data).await;
     match collabo_details {
@@ -58,23 +63,34 @@ pub async fn create_collabo(
     }
 }
 
-#[post("/generate_account")]
-pub async fn generate_account (db: Data<MongoRepo>, params: Json<GenerateAccountRequest>) -> HttpResponse {
-
-    // TODO:: fetch collabo
-
-    // TODO:: fetch user
-
-    let data = GenerateAccountParams {
-        account_type: "individual".to_string(),
-        account_name: "Test contribution collabo".to_string(), // Collabo name
-        first_name: "May".to_string(), // user first name
-        last_name: "soh".to_string(), // user last name
-        display_name: "May soh Limited".to_string(), // collabo name
-        email: "anitatom20@gmail.com".to_string(), // user email
-        bvn: params.bvn.to_owned(),
-        mobile_number: params.mobile_number.to_owned(),
+#[post("/generate_account/{collabo_id}")]
+pub async fn generate_account (req: HttpRequest, db: Data<MongoRepo>, params: Json<GenerateAccountRequest>, path: Path<String>) -> HttpResponse {
+    let user = match protected_route(req).await {
+        Ok(usr) => usr,
+        Err(_) => return HttpResponse::Unauthorized().finish().into(),
     };
 
-    PoolerProvider::generate_account(&data).await
+    let collabo_id = path.into_inner();
+    if collabo_id.is_empty() {
+        return HttpResponse::BadRequest().body("Collabo id is required");
+    }
+
+    let collabo = db.collabo_repo.get_collabo_by_id(&collabo_id).await;
+    match collabo {
+        Ok(col) => {
+            let data = GenerateAccountParams {
+                account_type: "individual".to_string(),
+                account_name: col.name.to_string(), // Collabo name
+                first_name: user.first_name.to_string(), // user first name
+                last_name: user.last_name.to_string(), // user last name
+                display_name: col.name.to_string(), // collabo name
+                email: user.email.to_string(), // user email
+                bvn: params.bvn.to_owned(),
+                mobile_number: params.mobile_number.to_owned(),
+            };
+
+            PoolerProvider::generate_account(&data, db, &collabo_id).await
+        }
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string())
+    }
 }

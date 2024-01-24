@@ -1,6 +1,7 @@
 use crate::models::user::User;
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
+use crate::providers::pooler_api::{GeneratedAccountResponse, PoolerResponse};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Collabo {
@@ -8,8 +9,8 @@ pub struct Collabo {
     pub id: Option<ObjectId>,
     pub name: String,
     pub balance: f64,
-    // pub user: User,
-    pub collabo_account: Option<CollaboAccount>,
+    pub user_id: String,
+    pub collabo_account_id:  Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -18,5 +19,9 @@ pub struct CollaboAccount {
     pub id: Option<ObjectId>,
     pub account_name: String,
     pub account_number: String,
-    pub account_bank_code: String,
+    pub provider: String,
+    pub account_status: bool,
+    pub provider_bank: String,
+    pub collabo_id: String,
+    pub(crate) metadata: PoolerResponse<GeneratedAccountResponse>
 }
