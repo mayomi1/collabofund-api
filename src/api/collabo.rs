@@ -1,6 +1,6 @@
 use crate::models::collabo::Collabo;
 use crate::repository::mongodb_repo::MongoRepo;
-use actix_web::{post, web::{Data, Json, Path}, HttpResponse, HttpRequest};
+use actix_web::{post, get, web::{Data, Json, Path}, HttpResponse, HttpRequest};
 
 use serde::{Deserialize, Serialize};
 use crate::utils::auth::protected_route;
@@ -93,4 +93,9 @@ pub async fn generate_account (req: HttpRequest, db: Data<MongoRepo>, params: Js
         }
         Err(err) => HttpResponse::InternalServerError().body(err.to_string())
     }
+}
+
+#[get("/list")]
+pub async fn fetch_collabos (req: HttpRequest, db: Data<MongoRepo>) -> HttpResponse {
+    // TODO fetch all
 }

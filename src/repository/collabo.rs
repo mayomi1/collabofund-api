@@ -58,4 +58,8 @@ impl CollaboRepo {
             .expect("Error updating collabo");
         Ok(update_doc)
     }
+
+    pub async fn fetch_collabos(&self) -> Result<Vec<Collabo>, MongoError> {
+
+    }
 }
