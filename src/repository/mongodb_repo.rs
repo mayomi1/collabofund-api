@@ -6,16 +6,17 @@ use dotenv::dotenv;
 use crate::models::{collabo::Collabo, user::User};
 use crate::repository::collabo::CollaboRepo;
 use crate::repository::user::UserRepo;
+use crate::repository::collabo_account::CollaboAccountRepo;
+
 use mongodb::{
-    bson::{doc, oid::ObjectId},
-    error::Error as MongoError,
-    results::{DeleteResult, InsertOneResult, UpdateResult},
     Client, Collection,
 };
+use crate::models::collabo::CollaboAccount;
 
 pub struct MongoRepo {
     pub user_repo: UserRepo,
     pub collabo_repo: CollaboRepo,
+    pub collabo_account_repo: CollaboAccountRepo,
 }
 
 impl MongoRepo {
@@ -29,13 +30,16 @@ impl MongoRepo {
 
         let user: Collection<User> = db.collection("Users");
         let collabo: Collection<Collabo> = db.collection("Collabos");
+        let collabo_account: Collection<CollaboAccount> = db.collection("CollaboAccounts");
 
         let user_repo = UserRepo { user };
         let collabo_repo = CollaboRepo { collabo };
+        let collabo_account_repo = CollaboAccountRepo { collabo_account };
 
         MongoRepo {
             user_repo,
             collabo_repo,
+            collabo_account_repo
         }
     }
 }

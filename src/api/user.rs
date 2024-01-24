@@ -1,6 +1,6 @@
 use bcrypt::{hash, DEFAULT_COST};
 
-use crate::{lib, models::user::User, repository::mongodb_repo::MongoRepo};
+use crate::{utils, models::user::User, repository::mongodb_repo::MongoRepo};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ use actix_web::{
     HttpResponse,
 };
 
-use lib::auth::{create_jwt, AuthUserData};
+use utils::auth::{create_jwt, AuthUserData};
 
 #[derive(Serialize)]
 struct ApiResponse {
@@ -18,7 +18,7 @@ struct ApiResponse {
 }
 
 #[derive(Deserialize)]
-struct LoginRequest {
+pub struct LoginRequest {
     email: String,
     password: String,
 }
@@ -38,6 +38,8 @@ pub async fn login_user(db: Data<MongoRepo>, login_request: Json<LoginRequest>) 
                         email: user.email,
                         title: user.title,
                         id: user.id,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
                     };
 
                     match create_jwt(user_data) {
@@ -64,7 +66,8 @@ pub async fn register_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpRes
     let data = User {
         id: None,
         email: new_user.email.to_owned(),
-        name: new_user.name.to_owned(),
+        first_name: new_user.first_name.to_owned(),
+        last_name: new_user.last_name.to_owned(),
         location: new_user.location.to_owned(),
         title: new_user.title.to_owned(),
         password: hashed_password,
@@ -102,7 +105,8 @@ pub async fn update_user(
     };
     let data = User {
         id: Some(ObjectId::parse_str(&id).unwrap()),
-        name: new_user.name.to_owned(),
+        first_name: new_user.first_name.to_owned(),
+        last_name: new_user.last_name.to_owned(),
         title: new_user.title.to_owned(),
         location: new_user.location.to_owned(),
         email: new_user.email.to_owned(),
