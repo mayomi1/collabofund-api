@@ -1,4 +1,4 @@
-use actix_web::{ HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use mongodb::bson::oid::ObjectId;
@@ -47,7 +47,7 @@ pub fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> 
         &DecodingKey::from_secret("some_secret".as_bytes()),
         &Validation::default(),
     )
-        .map(|data| data.claims)?)
+    .map(|data| data.claims)?)
 }
 
 pub async fn protected_route(req: HttpRequest) -> Result<AuthUserData, HttpResponse> {

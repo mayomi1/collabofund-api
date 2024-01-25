@@ -1,6 +1,6 @@
 use bcrypt::{hash, DEFAULT_COST};
 
-use crate::{utils, models::user::User, repository::mongodb_repo::MongoRepo};
+use crate::{models::user::User, repository::mongodb_repo::MongoRepo, utils};
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 

@@ -1,8 +1,8 @@
 mod api;
-mod utils;
 mod models;
-mod repository;
 mod providers;
+mod repository;
+mod utils;
 
 mod clients;
 
@@ -10,7 +10,7 @@ use actix_web::middleware::Logger;
 use actix_web::web::Data;
 use actix_web::{web, web::ServiceConfig};
 use api::{
-    collabo:: {create_collabo,generate_account},
+    collabo::{create_collabo, fetch_collabos, generate_account, get_collabo, update_collabo},
     user::{delete_user, get_user, login_user, register_user, update_user},
 };
 use shuttle_actix_web::ShuttleActixWeb;
@@ -38,6 +38,9 @@ async fn actix_web() -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send +
                 .wrap(Logger::default())
                 .service(create_collabo)
                 .service(generate_account)
+                .service(fetch_collabos)
+                .service(get_collabo)
+                .service(update_collabo)
                 .app_data(db_data.clone()),
         );
     };
