@@ -5,13 +5,11 @@ use dotenv::dotenv;
 
 use crate::models::{collabo::Collabo, user::User};
 use crate::repository::collabo::CollaboRepo;
-use crate::repository::user::UserRepo;
 use crate::repository::collabo_account::CollaboAccountRepo;
+use crate::repository::user::UserRepo;
 
-use mongodb::{
-    Client, Collection,
-};
 use crate::models::collabo::CollaboAccount;
+use mongodb::{Client, Collection};
 
 pub struct MongoRepo {
     pub user_repo: UserRepo,
@@ -39,7 +37,7 @@ impl MongoRepo {
         MongoRepo {
             user_repo,
             collabo_repo,
-            collabo_account_repo
+            collabo_account_repo,
         }
     }
 }

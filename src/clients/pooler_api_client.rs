@@ -1,7 +1,7 @@
-use std::env;
 use dotenv::dotenv;
 use reqwest;
 use serde::{de::DeserializeOwned, Serialize};
+use std::env;
 
 pub struct PoolerApiClient {
     base_url: String,
@@ -12,8 +12,10 @@ pub struct PoolerApiClient {
 impl PoolerApiClient {
     pub fn new() -> Self {
         dotenv().ok();
-        let base_url = env::var("POOLER_BASE_URL").expect("Error loading env variable POOLER_BASE_URL");
-        let secret_token = env::var("POOLER_SERCRET_TOKEN").expect("Error loading env variable POOLER_SERCRET_TOKEN");
+        let base_url =
+            env::var("POOLER_BASE_URL").expect("Error loading env variable POOLER_BASE_URL");
+        let secret_token = env::var("POOLER_SERCRET_TOKEN")
+            .expect("Error loading env variable POOLER_SERCRET_TOKEN");
 
         PoolerApiClient {
             base_url: base_url.to_string(),
@@ -23,8 +25,8 @@ impl PoolerApiClient {
     }
 
     pub async fn get<T>(&self, endpoint: &str) -> Result<T, reqwest::Error>
-        where
-            T: DeserializeOwned,
+    where
+        T: DeserializeOwned,
     {
         let url = format!("{}/{}", self.base_url, endpoint);
         let response = self.client.get(&url).send().await?;
@@ -32,13 +34,12 @@ impl PoolerApiClient {
     }
 
     pub async fn post<T, U>(&self, endpoint: &str, body: &U) -> Result<T, reqwest::Error>
-        where
-            T: DeserializeOwned,
-            U: Serialize,
+    where
+        T: DeserializeOwned,
+        U: Serialize,
     {
         let url = format!("{}/{}", self.base_url, endpoint);
         let mut request = self.client.post(&url).json(body);
-
 
         if let token = &self.authorization_token {
             request = request.header("Authorization", format!("Bearer {}", token));

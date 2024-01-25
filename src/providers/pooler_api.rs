@@ -1,11 +1,11 @@
-use actix_web::HttpResponse;
-use actix_web::web::Data;
-use serde::{Deserialize, Serialize};
 use crate::api::collabo::GenerateAccountParams;
 use crate::clients::pooler_api_client::PoolerApiClient;
-use crate::models::collabo::{CollaboAccount};
-use crate::repository::collabo::{UpdateCollaboAccountId};
+use crate::models::collabo::CollaboAccount;
+use crate::repository::collabo::UpdateCollaboAccountId;
 use crate::repository::mongodb_repo::MongoRepo;
+use actix_web::web::Data;
+use actix_web::HttpResponse;
+use serde::{Deserialize, Serialize};
 
 pub struct PoolerProvider;
 
@@ -41,7 +41,7 @@ pub struct PoolerResponse<T> {
     #[serde(rename = "message")]
     message: String,
     #[serde(rename = "data")]
-    data: Option<T>
+    data: Option<T>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,33 +52,54 @@ enum ApiResponse {
 }
 
 impl PoolerProvider {
-    pub async fn generate_account(body: &GenerateAccountParams, db: Data<MongoRepo>, collabo_id: &str) -> HttpResponse {
+    pub async fn generate_account(
+        body: &GenerateAccountParams,
+        db: Data<MongoRepo>,
+        collabo_id: &str,
+    ) -> HttpResponse {
         let pooler_client = PoolerApiClient::new();
 
         println!("Generating account body: {:?}", body);
-        match pooler_client.post::<ApiResponse, GenerateAccountParams>("/business/accounts", &body).await {
+        match pooler_client
+            .post::<ApiResponse, GenerateAccountParams>("/business/accounts", &body)
+            .await
+        {
             Ok(api_response) => {
                 match api_response {
                     ApiResponse::Success(response) => {
                         println!("Success Response: {:?}", response);
 
                         let generated_account = response.data.clone().unwrap();
-                        let saved_collabo_data = db.collabo_account_repo.create_collabo_account(CollaboAccount {
-                            id: None,
-                            account_name: generated_account.display_name,
-                            account_number: generated_account.account_no,
-                            provider: "pooler".to_string(),
-                            account_status: true,
-                            collabo_id: String::from(collabo_id),
-                            provider_bank: generated_account.bank_name,
-                            metadata: response.clone()
-                        }).await.expect("Error creating collabo account");
+                        let saved_collabo_data = db
+                            .collabo_account_repo
+                            .create_collabo_account(CollaboAccount {
+                                id: None,
+                                account_name: generated_account.display_name,
+                                account_number: generated_account.account_no,
+                                provider: "pooler".to_string(),
+                                account_status: true,
+                                collabo_id: String::from(collabo_id),
+                                provider_bank: generated_account.bank_name,
+                                metadata: response.clone(),
+                            })
+                            .await
+                            .expect("Error creating collabo account");
 
                         println!("saved_collabo_data {:?} ", saved_collabo_data);
                         // Update collabo with accoun Id
-                        db.collabo_repo.update_collabo_account_id(collabo_id, UpdateCollaboAccountId {
-                            collabo_account_id: saved_collabo_data.inserted_id.as_object_id().unwrap_or_default().to_string()
-                        }).await.expect("Error updating collabo");
+                        db.collabo_repo
+                            .update_collabo_account_id(
+                                collabo_id,
+                                UpdateCollaboAccountId {
+                                    collabo_account_id: saved_collabo_data
+                                        .inserted_id
+                                        .as_object_id()
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                },
+                            )
+                            .await
+                            .expect("Error updating collabo");
 
                         HttpResponse::Ok().json(response)
                     }
@@ -88,7 +109,7 @@ impl PoolerProvider {
                         HttpResponse::InternalServerError().body(error_message)
                     }
                 }
-            },
+            }
             Err(e) => {
                 eprintln!("Request failed >>>>>>>>: {:?}", e);
                 HttpResponse::InternalServerError().body(e.to_string())
